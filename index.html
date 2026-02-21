@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sabnahis Library System</title>
+<style>
+body { margin:0; font-family: Arial, sans-serif; background: #f5eee6; color: #4b2e1e; }
+header { background: #c8a97e; padding: 15px; text-align: center; color: #fff; }
+nav { background: #b08968; padding: 10px; text-align: center; }
+nav button { background: #ddb892; border: none; padding: 8px 14px; margin: 5px; cursor: pointer; border-radius: 5px; }
+nav button:hover { background: #c9a66b; }
+section { display: none; padding: 20px; }
+.active { display: block; }
+.card { background: #fff; padding: 15px; border-radius: 8px; max-width: 1200px; margin: auto; }
+.center { text-align: center; }
+img { max-width: 300px; border-radius: 8px; }
+input, select { width: 100%; padding: 6px; margin: 4px 0; }
+.small-box { max-width: 300px; margin: auto; }
+.search-box { display: flex; gap: 5px; max-width: 250px; margin-bottom: 10px; }
+.search-box input { flex: 1; padding:5px; }
+.highlight { background: yellow; }
+#receipt { background:#fdf6f0; border:1px solid #c8a97e; padding:10px; margin-top:10px; border-radius:5px; }
+.table-container { overflow-x:auto; }
+.card table { width:100%; border-collapse: collapse; font-size:13px; table-layout: fixed; min-width:1600px; }
+.card table th, .card table td { border: 1px solid #c8a97e; padding:6px; word-wrap: break-word; text-align: left; }
+.card table th { background:#e6ccb2; }
+.modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5); }
+.modal-content { background:#fff; margin:15% auto; padding:20px; border-radius:8px; max-width:300px; }
+.modal-content input { width:100%; margin:5px 0; padding:6px; }
+.modal-content button { width:100%; padding:8px; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Welcome to Sablayan National Comprehensive High School Library</h1>
+<p>Explore, borrow, and return books efficiently through this online platform.</p>
+</header>
+
+<nav>
+<button onclick="showSection('home')">Home</button>
+<button onclick="showSection('catalog')">Catalog</button>
+<button onclick="showSection('borrow')">Borrow</button>
+<button onclick="showSection('return')">Return</button>
+<button id="historyBtn" style="display:none;" onclick="showSection('history')">History</button>
+<button id="adminBtn" style="display:none;" onclick="showSection('admin')">Admin</button>
+<button id="logoutBtn" style="display:none;" onclick="logout()">Logout</button>
+</nav>
+
+<!-- HOME -->
+<section id="home" class="active">
+<div class="card center">
+<img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f" alt="Library">
+<h3>Select Your Role</h3>
+<button onclick="selectRole('student')">Student</button>
+<button onclick="selectRole('teacher')">Teacher</button>
+<button onclick="selectRole('librarian')">Librarian</button>
+</div>
+</section>
+
+<!-- Catalog -->
+<section id="catalog">
+<div class="card">
+<h2>Book Catalog</h2>
+<div class="search-box">
+<input id="searchInput" placeholder="Search by Title or Accession" onkeypress="if(event.key==='Enter') searchBook()">
+<button onclick="searchBook()">Search</button>
+</div>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Title</th><th>Other Title Info</th><th>Author</th><th>Place / Publisher / Date</th>
+<th>Edition</th><th>ISBN/ISSN</th><th>Accession No.</th><th>Classification No.</th>
+<th>Call Number</th><th>Subject</th><th>Price</th><th>No. of Pages</th>
+<th>Physical Description</th><th>General Notes</th><th>Book Type</th>
+<th>Book Category</th><th>Status/Remarks</th><th>Available Copies</th>
+</tr>
+</thead>
+<tbody id="catalogTable"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- Borrow -->
+<section id="borrow">
+<div class="card">
+<h2>Borrow Book</h2>
+<input placeholder="Name" id="borrowName">
+<input placeholder="Grade & Section" id="borrowGrade">
+<input placeholder="Date" type="date" id="borrowDate">
+<input placeholder="Accession No." id="borrowAccession">
+<input placeholder="Title of Book" id="borrowTitleField">
+<button onclick="borrowBook()">Borrow</button>
+<div id="receipt"></div>
+</div>
+</section>
+
+<!-- Return -->
+<section id="return">
+<div class="card">
+<h2>Return Book</h2>
+<input placeholder="Name" id="returnName">
+<input placeholder="Grade & Section" id="returnGrade">
+<input placeholder="Date" type="date" id="returnDate">
+<input placeholder="Accession No." id="returnAccession">
+<input placeholder="Title of Book" id="returnTitleField">
+<button onclick="returnBook()">Return</button>
+</div>
+</section>
+
+<!-- History -->
+<section id="history">
+<div class="card">
+<h2>Borrowing History</h2>
+<table>
+<thead><tr><th>History</th><th>Edit</th><th>Delete</th></tr></thead>
+<tbody id="historyList"></tbody>
+</table>
+</div>
+</section>
+
+<!-- Admin -->
+<section id="admin">
+<div class="card">
+<h2>Admin Panel - Book Management</h2>
+
+<h3>Add Book</h3>
+<input id="title" placeholder="Title">
+<input id="otherTitle" placeholder="Other Title Info">
+<input id="author" placeholder="Author">
+<input id="publication" placeholder="Place / Publisher / Date">
+<input id="edition" placeholder="Edition">
+<input id="isbn" placeholder="ISBN/ISSN">
+<input id="accession" placeholder="Accession No.">
+<input id="classNo" placeholder="Classification No.">
+<input id="callNo" placeholder="Call Number">
+<input id="subject" placeholder="Subject">
+<input id="price" placeholder="Price">
+<input id="pages" placeholder="No. of Pages">
+<input id="physical" placeholder="Physical Description">
+<input id="notes" placeholder="General Notes">
+<label>Book Type</label>
+<select id="type"><option>Book</option><option>CD</option><option>DVD</option></select>
+<label>Book Category</label>
+<select id="category"><option>Circulation</option><option>Fiction</option><option>Filipiniana</option><option>Periodical</option><option>Reference</option></select>
+<input id="status" placeholder="Status / Remarks">
+<input type="number" id="copies" placeholder="No. of Copies" min="1" value="1">
+<button onclick="addBook()">Add Book</button>
+
+<hr>
+<h3>Edit / Delete Books</h3>
+<div class="table-container">
+<table id="adminTable">
+<thead>
+<tr>
+<th>Title</th><th>Other Title Info</th><th>Author</th><th>Place / Publisher / Date</th>
+<th>Edition</th><th>ISBN/ISSN</th><th>Accession No.</th><th>Classification No.</th>
+<th>Call Number</th><th>Subject</th><th>Price</th><th>No. of Pages</th>
+<th>Physical Description</th><th>General Notes</th><th>Book Type</th>
+<th>Book Category</th><th>Status/Remarks</th><th>Available Copies</th><th>Save</th><th>Delete</th>
+</tr>
+</thead>
+<tbody id="adminTableBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- Librarian Login Modal -->
+<div id="loginModal" class="modal">
+<div class="modal-content">
+<h3>Librarian Login</h3>
+<input type="text" id="modalUsername" placeholder="Username">
+<input type="password" id="modalPassword" placeholder="Password">
+<button onclick="modalLogin()">Login</button>
+<button onclick="closeModal()">Cancel</button>
+</div>
+</div>
+
+<script>
+let books = JSON.parse(localStorage.getItem("books")) || [];
+let history = JSON.parse(localStorage.getItem("history")) || [];
+let loggedIn=false;
+
+function saveData(){ localStorage.setItem("books",JSON.stringify(books)); localStorage.setItem("history",JSON.stringify(history)); }
+
+function selectRole(role){
+    if(role==="librarian"){ document.getElementById("loginModal").style.display="block"; }
+    else { showSection('catalog'); document.getElementById("adminBtn").style.display="none"; document.getElementById("historyBtn").style.display="none"; }
+}
+function closeModal(){ document.getElementById("loginModal").style.display="none"; }
+
+function modalLogin(){
+    const user=document.getElementById("modalUsername").value;
+    const pass=document.getElementById("modalPassword").value;
+    if(user==="librarian" && pass==="admin123"){
+        loggedIn=true;
+        document.getElementById("adminBtn").style.display="inline-block";
+        document.getElementById("logoutBtn").style.display="inline-block";
+        document.getElementById("historyBtn").style.display="inline-block";
+        closeModal(); showSection("admin"); renderAdminTable(); alert("Login successful!");
+    } else { alert("Invalid credentials!"); }
+}
+
+function logout(){
+    loggedIn=false;
+    document.getElementById("adminBtn").style.display="none";
+    document.getElementById("logoutBtn").style.display="none";
+    document.getElementById("historyBtn").style.display="none";
+    alert("Logged out.");
+}
+
+function showSection(id){
+    if((id==="admin"||id==="history") && !loggedIn){ alert("Only librarian can access."); return; }
+    document.querySelectorAll("section").forEach(s=>s.style.display="none");
+    document.getElementById(id).style.display="block";
+    renderCatalog(); renderHistory();
+    if(id==="admin") renderAdminTable();
+}
+
+// ---------- Catalog ----------
+function renderCatalog(){
+    const tbody=document.getElementById("catalogTable"); tbody.innerHTML="";
+    books.forEach(book=>{
+        const row=tbody.insertRow();
+        Object.keys(book).forEach(k=>{ if(k!=="copiesAvailable") row.insertCell().innerText=book[k]; });
+        const availCell=row.insertCell(); availCell.innerText=book.copiesAvailable;
+    });
+}
+
+function searchBook(){
+    const value=document.getElementById("searchInput").value.toLowerCase();
+    document.querySelectorAll("#catalogTable tr").forEach(row=>{ row.classList.remove("highlight"); if(row.innerText.toLowerCase().includes(value)) row.classList.add("highlight"); });
+    document.getElementById("searchInput").value="";
+}
+
+// ---------- Add ----------
+function addBook(){
+    if(!document.getElementById("accession").value){ alert("Accession No. required"); return; }
+    const copies = parseInt(document.getElementById("copies").value) || 1;
+    books.push({
+        title:document.getElementById("title").value,
+        otherTitle:document.getElementById("otherTitle").value,
+        author:document.getElementById("author").value,
+        publication:document.getElementById("publication").value,
+        edition:document.getElementById("edition").value,
+        isbn:document.getElementById("isbn").value,
+        accession:document.getElementById("accession").value,
+        classNo:document.getElementById("classNo").value,
+        callNo:document.getElementById("callNo").value,
+        subject:document.getElementById("subject").value,
+        price:document.getElementById("price").value,
+        pages:document.getElementById("pages").value,
+        physical:document.getElementById("physical").value,
+        notes:document.getElementById("notes").value,
+        type:document.getElementById("type").value,
+        category:document.getElementById("category").value,
+        status:document.getElementById("status").value || "Available",
+        copiesAvailable: copies
+    });
+    saveData(); renderCatalog(); renderAdminTable();
+    document.querySelectorAll("#admin input, #admin select").forEach(el=>el.value="");
+    document.getElementById("type").value="Book";
+    document.getElementById("category").value="Circulation";
+    document.getElementById("status").value="Available";
+    document.getElementById("copies").value="1";
+    alert("Book added!");
+}
+
+// ---------- Admin Table ----------
+function renderAdminTable(){
+    const tbody=document.getElementById("adminTableBody"); tbody.innerHTML="";
+    books.forEach((b,i)=>{
+        const row=tbody.insertRow();
+        Object.keys(b).forEach(key=>{
+            if(key!=="copiesAvailable"){
+                const cell=row.insertCell();
+                const input=document.createElement("input");
+                input.value=b[key]; input.dataset.key=key;
+                cell.appendChild(input);
+            }
+        });
+        const availCell=row.insertCell(); availCell.innerText=b.copiesAvailable;
+        const saveCell=row.insertCell();
+        const saveBtn=document.createElement("button"); saveBtn.innerText="Save";
+        saveBtn.onclick=()=>{ 
+            Object.keys(b).forEach(k=>{ if(k!=="copiesAvailable") b[k]=row.cells[Object.keys(b).indexOf(k)].firstChild.value; }); 
+            saveData(); renderCatalog(); renderAdminTable(); 
+        };
+        saveCell.appendChild(saveBtn);
+        const delCell=row.insertCell();
+        const delBtn=document.createElement("button"); delBtn.innerText="Delete";
+        delBtn.onclick=()=>{ books.splice(i,1); saveData(); renderCatalog(); renderAdminTable(); };
+        delCell.appendChild(delBtn);
+    });
+}
+
+// ---------- Borrow/Return ----------
+function borrowBook(){
+    const acc=document.getElementById("borrowAccession").value.trim();
+    const book=books.find(b=>b.accession===acc);
+    if(!book){ alert("Book not found"); return; }
+    if(book.copiesAvailable<1){ alert("Book not available"); return; }
+    book.copiesAvailable--;
+    if(book.copiesAvailable===0) book.status="Unavailable";
+    history.push({action:"Borrowed", name:document.getElementById("borrowName").value, grade:document.getElementById("borrowGrade").value, date:document.getElementById("borrowDate").value, accession:acc, title:document.getElementById("borrowTitleField").value});
+    saveData(); renderCatalog(); renderHistory(); renderAdminTable();
+    document.getElementById("receipt").innerHTML=`<b>Receipt:</b><br>${document.getElementById("borrowName").value} borrowed "${document.getElementById("borrowTitleField").value}" on ${document.getElementById("borrowDate").value}`;
+    ["borrowName","borrowGrade","borrowDate","borrowAccession","borrowTitleField"].forEach(id=>document.getElementById(id).value="");
+}
+function returnBook(){
+    const acc=document.getElementById("returnAccession").value.trim();
+    const book=books.find(b=>b.accession===acc);
+    if(!book){ alert("Book not found"); return; }
+    book.copiesAvailable++;
+    book.status="Available";
+    history.push({action:"Returned", name:document.getElementById("returnName").value, grade:document.getElementById("returnGrade").value, date:document.getElementById("returnDate").value, accession:acc, title:document.getElementById("returnTitleField").value});
+    saveData(); renderCatalog(); renderHistory(); renderAdminTable();
+    ["returnName","returnGrade","returnDate","returnAccession","returnTitleField"].forEach(id=>document.getElementById(id).value="");
+    alert("Book returned!");
+}
+
+// ---------- History ----------
+function renderHistory(){
+    if(!loggedIn){ document.getElementById("historyList").innerHTML=""; return; }
+    const tbody=document.getElementById("historyList"); tbody.innerHTML="";
+    history.forEach((h,i)=>{
+        const row=tbody.insertRow();
+        row.insertCell().innerText=`${h.action} | ${h.name} | ${h.grade} | ${h.date} | ${h.title} | Acc:${h.accession}`;
+        const editCell=row.insertCell(); editCell.innerHTML=`<button onclick="editHistory(${i})">Edit</button>`;
+        const delCell=row.insertCell(); delCell.innerHTML=`<button onclick="deleteHistory(${i})">Delete</button>`;
+    });
+}
+function editHistory(i){
+    const h=history[i];
+    const newName=prompt("Edit Name:", h.name); if(newName) h.name=newName;
+    const newGrade=prompt("Edit Grade:", h.grade); if(newGrade) h.grade=newGrade;
+    const newDate=prompt("Edit Date:", h.date); if(newDate) h.date=newDate;
+    saveData(); renderHistory();
+}
+function deleteHistory(i){ if(confirm("Delete this history?")){ history.splice(i,1); saveData(); renderHistory(); } }
+
+renderCatalog(); renderHistory();
+</script>
+</body>
+</html>
